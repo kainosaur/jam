@@ -1,9 +1,12 @@
 //! A splash screen that plays briefly at startup.
 
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    render::texture::{ImageLoaderSettings, ImageSampler},
+};
 
 use super::Screen;
-use crate::{game::asset_loading::assets::ImageAssets, ui_tools::prelude::*, AppSet};
+use crate::{ui_tools::prelude::*, AppSet};
 
 pub(super) fn plugin(app: &mut App) {
     // Spawn splash screen.
@@ -13,8 +16,10 @@ pub(super) fn plugin(app: &mut App) {
     // Animate splash screen.
     app.add_systems(
         Update,
-        (tick_fade_in_out, apply_fade_in_out)
-            .chain()
+        (
+            tick_fade_in_out.in_set(AppSet::TickTimers),
+            apply_fade_in_out.in_set(AppSet::Update),
+        )
             .run_if(in_state(Screen::Splash)),
     );
 
@@ -36,7 +41,7 @@ const SPLASH_BACKGROUND_COLOR: Color = Color::srgb(0.157, 0.157, 0.157);
 const SPLASH_DURATION_SECS: f32 = 1.8;
 const SPLASH_FADE_DURATION_SECS: f32 = 0.6;
 
-fn spawn_splash(mut commands: Commands, image_assests: Res<ImageAssets>) {
+fn spawn_splash(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .ui_root()
         .insert((
@@ -53,7 +58,16 @@ fn spawn_splash(mut commands: Commands, image_assests: Res<ImageAssets>) {
                         width: Val::Percent(70.0),
                         ..default()
                     },
-                    image: UiImage::new(image_assests.splash.clone()),
+                    image: UiImage::new(asset_server.load_with_settings(
+                        // This should be an embedded asset for instant loading, but that is
+                        // currently [broken on Windows Wasm builds](https://github.com/bevyengine/bevy/issues/14246).
+                        "images/splash.png",
+                        |settings: &mut ImageLoaderSettings| {
+                            // Make an exception for the splash image in case
+                            // `ImagePlugin::default_nearest()` is used for pixel art.
+                            settings.sampler = ImageSampler::linear();
+                        },
+                    )),
                     ..default()
                 },
                 UiImageFadeInOut {
@@ -123,6 +137,6 @@ fn tick_splash_timer(time: Res<Time>, mut timer: ResMut<SplashTimer>) {
 
 fn check_splash_timer(timer: ResMut<SplashTimer>, mut next_screen: ResMut<NextState<Screen>>) {
     if timer.0.just_finished() {
-        next_screen.set(Screen::Title);
+        next_screen.set(Screen::Loading);
     }
 }
