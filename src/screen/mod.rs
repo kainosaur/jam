@@ -22,6 +22,7 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 /// The game's main screen states.
+/// If more states are added, add manually to dev_tools.rs (src\dev_tools.rs)
 #[derive(States, Debug, Hash, PartialEq, Eq, Clone, Default)]
 pub enum Screen {
     #[default]

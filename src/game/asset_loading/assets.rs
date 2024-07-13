@@ -1,10 +1,5 @@
 use bevy::prelude::*;
-use bevy_asset_loader::asset_collection::{AssetCollection, AssetCollectionApp};
-
-pub fn plugin(app: &mut App) {
-    app.init_collection::<ImageAssets>()
-        .init_collection::<AudioAssets>();
-}
+use bevy_asset_loader::asset_collection::AssetCollection;
 
 #[derive(AssetCollection, Resource)]
 pub struct ImageAssets {
@@ -12,7 +7,7 @@ pub struct ImageAssets {
     pub ducky: Handle<Image>,
     #[asset[path = "images/splash.png"]]
     // Unable to make splash linear due to bug
-    // #[asset(image(sampler = linear))]
+    #[asset(image(sampler = linear))]
     pub splash: Handle<Image>,
 }
 
