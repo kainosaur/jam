@@ -18,7 +18,7 @@ enum TitleAction {
     Play,
     Credits,
     /// Exit doesn't work well with embedded applications.
-    #[cfg(not(target = "wasm"))]
+    #[cfg(not(target_family = "wasm"))]
     Exit,
 }
 
@@ -30,7 +30,7 @@ fn enter_title(mut commands: Commands) {
             children.button("Play").insert(TitleAction::Play);
             children.button("Credits").insert(TitleAction::Credits);
 
-            #[cfg(not(target = "wasm"))]
+            #[cfg(not(target_family = "wasm"))]
             children.button("Exit").insert(TitleAction::Exit);
         });
 }
@@ -38,7 +38,7 @@ fn enter_title(mut commands: Commands) {
 fn handle_title_action(
     mut next_screen: ResMut<NextState<Screen>>,
     mut button_query: InteractionQuery<&TitleAction>,
-    mut app_exit: EventWriter<AppExit>,
+    #[cfg(not(target_family = "wasm"))] mut app_exit: EventWriter<AppExit>,
 ) {
     for (interaction, action) in &mut button_query {
         if matches!(interaction, Interaction::Pressed) {
@@ -46,7 +46,7 @@ fn handle_title_action(
                 TitleAction::Play => next_screen.set(Screen::Playing),
                 TitleAction::Credits => next_screen.set(Screen::Credits),
 
-                #[cfg(not(target = "wasm"))]
+                #[cfg(not(target_family = "wasm"))]
                 TitleAction::Exit => {
                     app_exit.send(AppExit::Success);
                 }
